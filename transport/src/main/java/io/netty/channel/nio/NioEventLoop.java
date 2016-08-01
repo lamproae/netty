@@ -20,6 +20,7 @@ import io.netty.channel.ChannelException;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopException;
 import io.netty.channel.SelectStrategy;
+import io.netty.channel.SendDirectByteBufPool;
 import io.netty.channel.SingleThreadEventLoop;
 import io.netty.util.IntSupplier;
 import io.netty.util.concurrent.RejectedExecutionHandler;
@@ -107,10 +108,13 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    final SendDirectByteBufPool bufferPool = new SendDirectByteBufPool();
+
     /**
      * The NIO {@link Selector}.
      */
     Selector selector;
+
     private SelectedSelectionKeySet selectedKeys;
 
     private final SelectorProvider provider;
@@ -435,6 +439,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             selector.close();
         } catch (IOException e) {
             logger.warn("Failed to close a selector.", e);
+        } finally {
+            bufferPool.release();
         }
     }
 
